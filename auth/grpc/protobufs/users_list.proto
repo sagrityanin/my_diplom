@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+message Users {
+            string user_id = 1;
+            string email = 2;
+        }
+
+message PageUsers {
+  string res_status = 1;
+  int32 total_count_page = 2;
+  repeated Users results = 3;
+}
+
+message UsersRequest {
+    string type_notification = 1;
+    int32 page_size = 2;
+    int32 page_number = 3;
+    string access_token = 4;
+}
+
+
+message UsersResponse {
+    PageUsers users_array = 1;
+}
+
+
+service UsersArray {
+    rpc UserList (UsersRequest) returns (UsersResponse);
+}
+
+

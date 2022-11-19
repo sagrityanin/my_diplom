@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+ 
+    {% if msg %}
+    Результат: {{ msg }}    
+    {% endif %}
+     
+    <form action="/recaptcha/api/v1" method="post">
+        {{ form.csrf_token }}   
+
+        {{ form.recaptcha }}
+        <input type="submit" value="Отправить">
+    </form>
+ 
+{% endblock %}

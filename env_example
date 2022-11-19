@@ -1,0 +1,91 @@
+# Django
+DB_HOST="postgres13"
+DB_PORT="5432"
+DB_NAME="movies_database"
+DB_USER="app"
+DB_PASSWORD="123qwe"
+DEBUG="True"
+SECRET_KEY="django-insecure--t&pbqazm0@g0a=5p=hwc@%apd1hdc%i4w*)7a9-xsgd)ah581"
+ALLOWED_HOSTS="192.168.248.1,192.168.248.138,movie_backend,localhost,127.0.0.1"
+INTERNAL_IPS="192.168.248.138,192.168.248.1,127.0.0.1,movie_backend"
+
+# Postgres
+POSTGRES_DB="movies_database"
+POSTGRES_USER="app"
+POSTGRES_PASSWORD="123qwe"
+
+# Auth
+AUTH_POSTGRES_DB="auth"
+AUTH_POSTGRES_USER="app"
+AUTH_POSTGRES_PASSWORD="123qwe"
+AUTH_POSTGRES_HOST="authpostgres"
+AUTH_POSTGRES_PORT="5432"
+AUTH_REDIS="redis-auth"
+AUTH_REDIS_PORT=6379
+TTL_ACCESS_TOKEN =  3600
+TTL_REFRESH_TOKEN =  804800
+JWT_KEY="SuperPuperKey"
+
+
+# Elastic
+ELASTIC_HOST="elasticsearch"
+ELASTIC_PORT="9200"
+ELASTIC_URI="http://elasticsearch:9200"
+
+REDIS_HOST="redis"
+REDIS_PORT=6379
+
+# ETL
+FILE_STATE_PATH="etl/state.json"
+SQLITE_DB_PATH="/app/etl/fill_postgres/db.sqlite"
+
+TAG="1.0"
+
+#FastApi
+FASTAPI_URL='http://fastapi:8000'
+LOG_LEVEL='INFO'
+PROJECT_NAME='openApi'
+CACHE_EXPIRE_IN_SECONDS=300
+SEARCH_ELASTIC_RECORDS_LIMIT=10000
+
+# Flask
+FLASK_APP="app.py"
+RATE_LIMIT_DEFAULT_SEC=["5000 per hour", "500 per minute", "50 per second"]
+RATE_LIMIT_TOKEN="50 per minute"
+RATE_LIMIT_USERS="500 per minute"
+RATE_LIMIT_VK="50 per minute"
+RATE_LIMIT_YA="50 per minute"
+
+CELERY_REDIS_HOST="celery-redis"
+CELERY_REDIS_PORT=6379
+CELERY_REDIS_PASSWORD="sDf8ad60d"
+CELERY_REDIS_DB=5
+CELERY_REDIS_PAYMENTS_DB=6
+
+RMQ_HOST="rabbitmq"
+RMQ_USER="guest"
+RMQ_PASSWORD="guest"
+
+RMQ_EMAIL_EXCHANGE=""
+RMQ_EMAIL_QUEUE="email.notification"
+RMQ_EMAIL_ROUTING_KEY="email.notification"
+
+RMQ_WS_QUEUE="websokets.notification"
+RMQ_WS_ROUTING_KEY="websokets.notification"
+
+RMQ_PAYMENTS_EXCHANGE="amq.direct"
+RMQ_PAYMENTS_ROUTING_KEY="payments"
+RMQ_PAYMENTS_QUEUE="payments"
+
+MONGO_DSN = "mongodb://mongo:27017/"
+MONGO_NOTIFICATION_COLLECTION = "email_notification"
+MONGO_DB = "films_summary"
+
+EMAIL_USER = "noreply.messagemailer@gmail.com"
+EMAIL_PASSWORD = "superpassword"
+
+CLOUDPAYMENTS_API_KEY=""
+CLOUDPAYMENTS_PUBLIC_ID=""
+
+EXTERNAL_PAY_API_URL="https://pycinema.ru/payments"
+INTERNAL_PAY_API_URL="http://payments-api:8000"

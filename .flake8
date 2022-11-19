@@ -1,0 +1,43 @@
+[flake8]
+ignore = D203
+exclude =
+    .git
+    __pycache__
+    docs/source/conf.py
+    logs
+    auth/token_payload/partition/patition_users_logs.py
+    auth/token_payload/partition/fill_users_logs.py
+    auth/token_payload/payload_pb2_grpc.py
+    auth/token_payload/payload_pb2.py
+    auth/admin/tests/token_test.py
+
+max-line-length = 121
+
+
+per-file-ignores =
+
+    auth/admin/tests/test_admin.py:E402
+    auth/admin/app.py:F401
+    auth/admin/db/postgres.py:E501
+    auth/admin/migrations/env.py:E501
+    auth/admin/migrations/versions/7d022738afb7_adding_roles_to_the_table_roles.py:E501
+    auth/admin/payload_get/token_payload.py:E501
+    auth/admin/tests/test_admin.py:E501
+    auth/admin/tests/test_price.py:E402
+    auth/admin/core/utils.py:F811
+    auth/auth/tests/token_test.py:E402
+    auth/auth/tests/test_yandex.py:E501
+    auth/auth/service/vk_authorization_v1.py:E501
+    auth/auth/service/yandex_authorization_v1.py:E501
+    auth/auth/migrations/versions/7d022738afb7_adding_roles_to_the_table_roles.py:E501
+    auth/auth/migrations/env.py:E501
+    auth/auth/core/ext_users.py:E501
+    auth/auth/db/postgres.py:E501
+    auth/token_payload/partition/patition_users_logs.py:E402
+    auth/token_payload/partition/patition_users_logs.py:W291
+    auth/admin/core/logger.py:E124
+    auth/admin/core/token.py:E501
+    auth/admin/tests/token_test.py:E402
+    tests/test_pay.py:F841
+    tests/test_pay.py:E501
+    tests/test_login.py:F841
