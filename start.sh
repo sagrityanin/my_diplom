@@ -1,5 +1,5 @@
 #!/bin/bash
-docker compose -f docker-compose.yml up $1 -d
+docker compose -f docker-compose.test.yml up $1 -d
 
 docker exec -it auth bash test_auth.sh
 

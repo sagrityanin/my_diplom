@@ -5,6 +5,9 @@ exclude =
     __pycache__
     docs/source/conf.py
     logs
+    auth/grpc/app/users_list_pb2_grpc.py
+    auth/grpc/app/users_list_pb2.py
+    auth/cron/partition/patition_users_logs.py
     auth/token_payload/partition/patition_users_logs.py
     auth/token_payload/partition/fill_users_logs.py
     auth/token_payload/payload_pb2_grpc.py
@@ -41,3 +44,9 @@ per-file-ignores =
     tests/test_pay.py:F841
     tests/test_pay.py:E501
     tests/test_login.py:F841
+    payments-client/db/postgres.py:E501
+    auth/cron/partition/patition_users_logs.py:W291
+    auth/cron/reminder/reminder.py:E402
+    auth/cron/reminder/rabbitmq.py:E402
+    auth/cron/partition/patition_users_logs.py:E402
+    payments-client/services/prices.py:E712

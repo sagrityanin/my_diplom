@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   nginx-admin:
     image: nginx:1.22.0
@@ -9,9 +7,9 @@ services:
       - 8008:80
       - 8443:443
     volumes:
-      - ./auth/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./auth/nginx/conf_admin:/etc/nginx/conf.d:ro
-      - ./auth/nginx/auth_static:/etc/nginx/html/swaggerui:ro
+      - ./nginx_admin/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx_admin/conf_admin:/etc/nginx/conf.d:ro
+      - ./nginx_admin/auth_static:/etc/nginx/html/swaggerui:ro
       - ./ui/ssl:/ssl:ro
     networks:
       - my-network
@@ -29,7 +27,7 @@ services:
       POSTGRES_PASSWORD: $AUTH_POSTGRES_PASSWORD
     volumes:
       - auth_postgres_volume:/var/lib/postgresql/data
-      - ./auth/auth_db/postgres_config/set_schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./auth_db/postgres_config/set_schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 15s
@@ -39,7 +37,7 @@ services:
       - my-network
 
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.39.0
     container_name: jaeger
     restart: always
     ports:
@@ -71,7 +69,7 @@ services:
 
   admin:
     build:
-      context: ./auth/admin
+      context: ./admin
       dockerfile: Dockerfile
     image: admin:${TAG}
     container_name: admin
@@ -90,12 +88,12 @@ services:
 
   captcha:
     build:
-      context: ./auth/captcha
+      context: ./captcha
       dockerfile: Dockerfile
     image: captcha:${TAG}
     container_name: captcha
     volumes:
-      - ./auth/captcha:/home/flask
+      - ./captcha:/home/flask
     environment:
       - THREADS=without
     expose:
@@ -104,19 +102,18 @@ services:
       - 5050:5000
     depends_on:
       - redis-auth
-#    command: /bin/bash -c "sleep 5; flask run --host=0.0.0.0;"
     networks:
       - my-network
     env_file: .env
 
   recaptcha:
     build:
-      context: ./auth/recaptcha
+      context: ./recaptcha
       dockerfile: Dockerfile
     image: recaptcha:${TAG}
     container_name: recaptcha
     volumes:
-      - ./auth/recaptcha:/home/flask
+      - ./recaptcha:/home/flask
     environment:
       - THREADS=without
     expose:
@@ -129,12 +126,10 @@ services:
 
   cron:
     build:
-      context: ./auth/cron
+      context: ./cron
       dockerfile: Dockerfile
     image: cron:${TAG}
     container_name: cron
-    volumes:
-      - ./auth/cron:/app
     environment:
       - THREADS=without
     depends_on:
@@ -152,7 +147,7 @@ services:
     container_name: redis-auth
     restart: unless-stopped
     volumes:
-     - ./auth/redis/additional.conf:/additional.conf:ro
+     - ./redis/additional.conf:/additional.conf:ro
     expose:
       - 6379
     networks:
@@ -253,7 +248,7 @@ services:
       REDIS_HOST: $CELERY_REDIS_HOST
       REDIS_PORT: $CELERY_REDIS_PORT
       REDIS_PASSWORD: $CELERY_REDIS_PASSWORD
-    image: bitnami/redis:latest
+    image: bitnami/redis:7.0.5
     depends_on:
       rabbitmq-manager:
         condition: service_healthy
@@ -441,8 +436,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-    ports:
-      - 8080:8080
     depends_on:
       - payments-api
       - auth
@@ -455,11 +448,11 @@ services:
     hostname: web-ui
     env_file:
       - .env
-    image: nginx:latest
+    image: nginx:1.23.2
     volumes:
       - ./ui/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ui/cors-options-hack.conf:/etc/nginx/cors-options-hack.conf:ro
-      - ./auth/nginx/auth_static:/etc/nginx/html/swaggerui:ro
+      - ./nginx_admin/auth_static:/etc/nginx/html/swaggerui:ro
       - ./ui/web:/web:ro
       - ./ui/ssl:/ssl:ro
     ports:

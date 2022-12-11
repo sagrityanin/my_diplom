@@ -1,4 +1,4 @@
-POSTFIX_TAG (ugc_nginx:|reviews|auth_nginx:|admin_nginx:|admin_nginx|auth|admin|web_ui|web_ui:)
+POSTFIX_TAG (ugc_nginx:|reviews|auth_nginx:|admin_nginx:|admin_nginx|auth|admin|web_ui|web_ui:|payments_client|payments_api)
 POSTFIX_DATETIME [0-9]{1,2}/\b(?:[Jj]an(?:uary|uar)?|[Ff]eb(?:ruary|ruar)?|[Mm](?:a|ä)?r(?:ch|z)?|[Aa]pr(?:il)?|[Mm]a(?:y|i)?|[Jj]un(?:e|i)?|[Jj]ul(?:y|i)?|[Aa]ug(?:ust)?|[Ss]ep(?:tember)?|[Oo](?:c|k)?t(?:ober)?|[Nn]ov(?:ember)?|[Dd]e(?:c|z)(?:ember)?)\b/\d{4}:(?:2[0123]|[01]?[0-9]):(?:[0-5][0-9]):(?:(?:[0-5]?[0-9]|60)(?:[:.,][0-9]+)?)
 POSTFIX_TIMEZONE \S\d{2,4}
 POSTFIX_METOD (PUT|POST|GET)

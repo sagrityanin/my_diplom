@@ -1,6 +1,10 @@
 import unittest
-from seleniumwire import webdriver
+# from seleniumwire import webdriver
+from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import DesiredCapabilities
 import warnings
 import requests
 import sjwt
@@ -20,7 +24,6 @@ params = {}
 def get_user_id() -> str:
     url = "https://pycinema.ru:8443/admin/api/v1/user/users-list?sort_order=asc&sort_field=email&page_number=1&page_size=5"
     res = requests.get(url, headers=headers).json()
-    # print("res", res)
     params["user_id"] = list(filter(lambda x: x["email"] == "sagrityanin@yandex.ru", res["users"]))[0]["id"]
     params["email"] = "sagrityanin@yandex.ru"
     payload = {"user_id": params["user_id"], "type": "access_token", "role": "unsubscriber",
@@ -35,14 +38,13 @@ def get_user_id() -> str:
 def get_price():
     price_url = "https://pycinema.ru:8443/admin/api/v1/price/"
     res = requests.get(price_url, headers=headers).json()
-    price_id = res[0]["id"]
-    # price_id_14 = list(filter(lambda x: x["duration"] == 14, res))[0]["id"]
+    price_id = res[4]["id"]
     return price_id
 
 
 def test_pay_widget():
-    # driver = webdriver.Firefox()
-    driver = webdriver.Chrome()
+    driver = webdriver.Firefox()
+    # driver = webdriver.Chrome()
     warnings.simplefilter("ignore", ResourceWarning)
 
     url = "https://pycinema.ru/index.html"
@@ -61,9 +63,13 @@ def test_pay_widget():
     order = driver.find_elements(By.ID, price_id)[0]
     assert order is not None
     order.click()
-    sleep(10)
-
-    iframe = driver.find_elements(By.TAG_NAME, 'iframe')[0]
+    sleep(1)
+    no_renewal = driver.find_elements(By.TAG_NAME, "button")[-1]
+    no_renewal.click()
+    sleep(1)
+    
+    iframe = driver.find_elements(By.TAG_NAME, "iframe")[0]
+    
     assert iframe is not None
     driver.switch_to.frame(iframe)
     sleep(2)
@@ -82,10 +88,7 @@ def test_pay_widget():
     sleep(15)
     pass
     print("pay widget success")
-    driver.close()
 
-
-def test_check_order():
     print()
     print("Start check order status")
     get_user_id()
@@ -93,12 +96,12 @@ def test_check_order():
 
     for i in range(120):
         res = requests.get(url, headers=params["headers"]).json()
-        print(i, res["subscription"]["payment_status"])
+        print(i)
         if "subscription" in res and res["subscription"]["payment_status"] == "payment_completed":
             assert res["subscription"]["payment_status"] == "payment_completed"
             break
         sleep(5)
-
+    driver.close()
 
 if __name__ == "__main__":
     unittest.main()
