@@ -24,7 +24,7 @@ from models.users import Users  # type: ignore
 from opentelemetry import trace  # type: ignore
 
 from api.v1.price import api as price_ns
-from api.v1.subsribtion import api as subscribtion_ns
+from api.v1.subsription import api as subscribtion_ns
 from api.v1.token import api as token_ns
 from api.v1.user import api as user_ns  # type: ignore
 

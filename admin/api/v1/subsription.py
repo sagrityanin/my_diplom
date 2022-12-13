@@ -2,7 +2,8 @@ from flask import request
 from flask_restx import Namespace, Resource  # type: ignore
 
 from core import schemas   # type: ignore
-from service import decor_function, subscribtion  # type: ignore
+from service import decor_function  # type: ignore
+from service.subscription import SubscriptionClass  # type: ignore
 from core.config import settings  # type: ignore
 from core.logger import file_handler  # type: ignore
 from service.rate_limiter import limiter  # type: ignore
@@ -21,7 +22,7 @@ model_response_400_401_403_404_base = api.model("ErrorBase", schemas.model_respo
 
 
 @api.route("/set-promo")
-class Subscribtion(Resource):
+class Subscription(Resource):
     decorators = [limiter.limit(settings.RATE_LIMIT_USERS, override_defaults=False)]
 
     @api.doc(
@@ -37,9 +38,9 @@ class Subscribtion(Resource):
         """
         Create promo subscribtion
         """
-        requesty_params = request.json
-        api.logger.info(requesty_params)
+        request_params = request.json
+        api.logger.info(request_params)
 
-        res = subscribtion.make_promo(requesty_params["users"], requesty_params["price_id"])
+        res = SubscriptionClass.make_promo(request_params["users"], request_params["price_id"])
         api.logger.info(res)
         return res

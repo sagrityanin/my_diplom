@@ -126,7 +126,7 @@ services:
         condition: service_healthy
     command: /bin/bash -c "service filebeat start; flask run --host=0.0.0.0; "
     healthcheck:
-      test: curl --fail -s http://localhost:5000/ || exit 1
+      test: curl --fail -s http://localhost:5000/admin/api/v1/ || exit 1
       interval: 15s
       timeout: 10s
       retries: 3

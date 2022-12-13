@@ -81,6 +81,11 @@ services:
       - authpostgres
       - redis-auth
       - auth
+    healthcheck:
+      test: curl --fail -s http://localhost:5000/admin/api/v1/ || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 3
     networks:
       - my-network
     env_file: .env
