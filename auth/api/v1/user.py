@@ -1,7 +1,7 @@
 import logging
 import sjwt
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
-from core import (decor_function, hash, schemas, utils)  # type: ignore
+from core import (decor_function, hash, schemas)  # type: ignore
 from core.config import settings  # type: ignore
 from core.logger import file_handler  # type: ignore
 from core.rate_limiter import limiter  # type: ignore
@@ -109,7 +109,6 @@ class Logout(Resource):
         if has_refresh_token is None:
             api.logger.info("Need refresh token")
             raise BadRequest("Need refresh token")
-        # refresh_payload = utils.get_payload(has_refresh_token)
         refresh_payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=has_refresh_token)
         res["user_email"] = refresh_payload["user_email"]
         if refresh_payload["type"] == "refresh_token" and refresh_payload["Check_token"] is True:
@@ -146,7 +145,6 @@ class Profile(Resource):
         """
         profile = {}
         try:
-            # payload = utils.get_payload(request.headers.get("access_token"))
             payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers.get("access_token"))
             profile["user_email"] = payload["user_email"]
             if payload["type"] == "access_token":
@@ -180,7 +178,6 @@ class UserCheck(Resource):
         if captcha_token is None:
             api.logger.info("Captcha token not present")
             raise BadRequest("Captcha token not present")
-        # captcha_token_payload = utils.get_payload(captcha_token)
         captcha_token_payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=captcha_token)
         if captcha_token_payload["Check_token"] is True and \
                 captcha_token_payload["type"] == "captcha":

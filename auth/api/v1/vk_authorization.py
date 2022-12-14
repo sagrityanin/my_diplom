@@ -1,13 +1,14 @@
-from core import schemas, utils  # type: ignore
+from flask import request
+from flask_restx import Namespace, Resource  # type: ignore
+from werkzeug.exceptions import BadRequest, Unauthorized
+from core import schemas  # type: ignore
 from core.config import settings  # type: ignore
 from service.ext_users import VkUser  # type: ignore
 from core.logger import file_handler  # type: ignore
 from core.rate_limiter import limiter  # type: ignore
 from db.redis import redis_conn
-from flask import request
-from flask_restx import Namespace, Resource  # type: ignore
 from models.users import Users
-from werkzeug.exceptions import BadRequest, Unauthorized
+from service.user import UserClass
 
 authorizations = schemas.authorizations
 api = Namespace("vk-com", description="External authorization by vk.com", authorizations=authorizations,
@@ -106,10 +107,10 @@ class VkLogin(Resource):
             if user.is_active is False:
                 api.logger.info(f"user {ext_user.email} not active")
                 raise Unauthorized(f"user {ext_user.email} not active")
-            utils.write_log(user.id, user_log_agent, "success user login")
+            UserClass.write_log(user.id, user_log_agent, "success user login")
             api.logger.info(f"{user.id} success user login")
-            return utils.create_load_tokens(ext_user.email, user.id, user.role_id)
-        utils.write_log(ext_user.email, "vk access token", "unsuccess user login")
+            return UserClass.create_load_tokens(ext_user.email, user.id, user.role_id)
+        UserClass.write_log(ext_user.email, "vk access token", "unsuccess user login")
         api.logger.info("vk access token broken")
         raise Unauthorized("vk access token broken")
 

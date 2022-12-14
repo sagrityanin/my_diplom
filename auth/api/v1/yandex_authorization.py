@@ -1,14 +1,16 @@
-from core import schemas, utils  # type: ignore
+from flask import request
+from flask_restx import Namespace, Resource  # type: ignore
+from werkzeug.exceptions import BadRequest, Unauthorized
+
+from core import schemas  # type: ignore
 from core.config import settings  # type: ignore
 from service.ext_users import YandexUser  # type: ignore
 from core.logger import file_handler  # type: ignore
 from core.rate_limiter import limiter  # type: ignore
 from db.redis import redis_conn
-from flask import request
-from flask_restx import Namespace, Resource  # type: ignore
 from models.ext_auth import ExtAuth
 from models.users import Users
-from werkzeug.exceptions import BadRequest, Unauthorized
+from service.user import UserClass
 
 authorizations = schemas.authorizations
 api = Namespace("yandex", description="External authorization by yandex", authorizations=authorizations,
@@ -110,9 +112,9 @@ class YaLogin(Resource):
         if user.is_active is False:
             api.logger.info(f"user {ext_user.email} not active")
             raise Unauthorized(f"user {ext_user.email} not active")
-        utils.write_log(user.id, user_log_agent, "success user login")
+        UserClass.write_log(user.id, user_log_agent, "success user login")
         api.logger.info(f"User {ext_user.email} successful login")
-        return utils.create_load_tokens(ext_user.email, user.id, user.role_id)
+        return UserClass.create_load_tokens(ext_user.email, user.id, user.role_id)
 
 
 @api.route("/yandex-set-email")

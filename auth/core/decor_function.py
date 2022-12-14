@@ -1,7 +1,6 @@
 from functools import wraps
 
 import sjwt
-from core import utils  # type: ignore
 from core.config import settings
 from flask import jsonify, request
 
@@ -10,7 +9,7 @@ def admin_required():
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            payload = utils.get_payload(request.headers["access_token"])
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["access_token"])
             if payload["role"] == "admin" or payload["role"] == "superuser":
                 return fn(*args, **kwargs)
             return {"message": "Admin access required"}
@@ -24,7 +23,7 @@ def admin_or_self_user_required(user_id):
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            payload = utils.get_payload(request.headers["access_token"])
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["access_token"])
             if payload["role"] == "admin" or payload["role"] == "superuser" \
                     or payload["user_id"] == user_id:
                 return fn(*args, **kwargs)
@@ -58,7 +57,7 @@ def active_required():
 
 
 def check_admin_or_self_user(token: str, user_id: str):
-    payload = utils.get_payload(token)
+    payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=token)
     print("payload", payload)
     if payload["role"] == "admin" or payload["role"] == "superuser" \
             or payload["user_id"] == user_id:
@@ -67,7 +66,7 @@ def check_admin_or_self_user(token: str, user_id: str):
 
 
 def check_self_user(token: str, user_id: str):
-    payload = utils.get_payload(token)
+    payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=token)
     if payload["user_id"] == user_id:
         return True
     return False
