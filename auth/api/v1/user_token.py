@@ -8,6 +8,8 @@ from flask import request
 from flask_restx import Namespace, Resource  # type: ignore
 from werkzeug.exceptions import BadRequest, Unauthorized
 
+from service.user_token import TokenClass
+
 authorizations = schemas.authorizations
 api = Namespace("token", description="Endpoint for workwith token", authorizations=authorizations, url_prefix="/token")
 
@@ -33,8 +35,6 @@ class TokenGet(Resource):
         Endpoint for test
         """
         payload = request.json
-        # token_item = token.TokenGet(payload)
-        # new_token = token_item.get_token()
         new_token = sjwt.gettoken.get_token(settings.JWT_KEY, **payload)
         resp = flask.Response("Token generated")
         resp.headers["access_token"] = new_token
@@ -52,14 +52,15 @@ class PayloadGet(Resource):
     @api.response(401, 'Unauthorized', model_response_400_401_403_404_base)
     @api.response(403, 'Forbidden', model_response_400_401_403_404_base)
     @api.doc(security='access_token')
-    @utils.token_required
+    @TokenClass.token_required
     @api.expect()
     def get(self):
         """
         Parse token
         """
         api.logger.info("Get payload")
-        return utils.get_payload(request.headers["access_token"])
+        # return utils.get_payload(request.headers["access_token"])
+        return sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["access_token"])
 
 
 @api.route("/token-reissue")
@@ -78,7 +79,8 @@ class TokenReissue(Resource):
         Refresh your tokens
         """
         try:
-            payload = utils.get_payload(request.headers["refresh_token"])
+            # payload = utils.get_payload(request.headers["refresh_token"])
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["refresh_token"])
         except Exception:
             api.logger.info("Have not refresh_token")
             raise BadRequest("Have not refresh_token")
@@ -88,7 +90,7 @@ class TokenReissue(Resource):
         if payload["type"] != "refresh_token":
             api.logger.info("Broken token type")
             raise BadRequest("Broken token type")
-        if utils.get_token_from_redis(payload):
+        if TokenClass.get_token_from_redis(payload):
             api.logger.info(f"User {payload['user_id']} has logout")
             raise Unauthorized(f"User {payload['user_id']} has logout")
         resp = flask.Response("Token generated")
@@ -99,7 +101,7 @@ class TokenReissue(Resource):
             payload["role"] = "unsubscriber"
         for field in common_token_field_list:
             new_payload[field] = payload[field]
-        list_token = utils.create_two_token(new_payload)
+        list_token = TokenClass.create_two_token(new_payload)
         for token in list_token:
             resp.headers[token] = list_token[token]
         utils.write_log(new_payload["user_id"], "TokenReissue", "success token recreate")

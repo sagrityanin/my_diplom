@@ -1,7 +1,3 @@
-from core import schemas  # type: ignore
-from core.application import app  # type: ignore
-from core.config import settings  # type: ignore
-from db.postgres import db, init_db
 from flask import Blueprint, request
 from flask.cli import AppGroup
 from flask_migrate import Migrate  # type: ignore
@@ -13,10 +9,15 @@ from opentelemetry.instrumentation.flask import \
 from opentelemetry.sdk.trace import TracerProvider  # type: ignore
 from opentelemetry.sdk.trace.export import BatchSpanProcessor  # type: ignore
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from service.token_v1 import api as token_ns  # type: ignore
-from service.user_v1 import api as user_ns  # type: ignore
-from service.vk_authorization_v1 import api as vk_com  # type: ignore
-from service.yandex_authorization_v1 import api as yandex  # type: ignore
+
+from api.v1.user_token import api as token_ns  # type: ignore
+from api.v1.user import api as user_ns  # type: ignore
+from api.v1.vk_authorization import api as vk_com  # type: ignore
+from api.v1.yandex_authorization import api as yandex  # type: ignore
+from core import schemas  # type: ignore
+from core.application import app  # type: ignore
+from core.config import settings  # type: ignore
+from db.postgres import db, init_db
 
 
 def configure_tracer() -> None:
