@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import requests
 import sjwt  # type: ignore
-from core import hash, schemas, user_settings  # type: ignore
+from core import hash, schemas  # type: ignore
 from core.config import settings  # type: ignore
 from db.postgres import db  # type: ignore
 from db.rabbitmq import queue
@@ -17,6 +17,7 @@ from models.confirm_email import ConfirmEmail
 from models.roles import Roles
 from models.users import Users
 from models.users_logs import UsersLogs
+from service.user_settings import UserSettings
 
 
 def token_required(f):
@@ -122,12 +123,12 @@ def update_profile(request_dict: dict, payload: dict, user_id: str) -> dict:
         user = Users.query.filter_by(id=user_id).first()
         logging.info(f"user id {user.id}")
 
-        profile["login"] = user_settings.set_login(request_dict, user)
-        profile["password"] = user_settings.set_password(request_dict, user)
-        profile["role"] = user_settings.set_role(request_dict, user, payload)
-        profile["is_active"] = user_settings.set_status(request_dict, user, payload)
-        profile["email_notification"] = user_settings.set_email_notification(request_dict, user)
-        profile["ws_notification"] = user_settings.set_ws_notification(request_dict, user)
+        profile["login"] = UserSettings.set_login(request_dict, user)
+        profile["password"] = UserSettings.set_password(request_dict, user)
+        profile["role"] = UserSettings.set_role(request_dict, user, payload)
+        profile["is_active"] = UserSettings.set_status(request_dict, user, payload)
+        profile["email_notification"] = UserSettings.set_email_notification(request_dict, user)
+        profile["ws_notification"] = UserSettings.set_ws_notification(request_dict, user)
 
     elif payload["Check_token"] == "time out":
         profile["token"] = "time out"

@@ -1,17 +1,17 @@
 import logging
-
 import sjwt
-from core import (decor_function, hash, schemas, user_settings,  # type: ignore
-                  utils)
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from core import (decor_function, hash, schemas, utils)  # type: ignore
 from core.config import settings  # type: ignore
 from core.logger import file_handler  # type: ignore
 from core.rate_limiter import limiter  # type: ignore
-from core.user import user
+from service.user_paid import user
 from db.redis import redis_conn
 from flask import request
 from flask_restx import Namespace, Resource, fields  # type: ignore
 from models.users import Users
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from service.user_settings import UserSettings
+from service.user import UserClass
 
 authorizations = schemas.authorizations
 api = Namespace("users", description="Endpoint for work with users", authorizations=authorizations,
@@ -79,11 +79,11 @@ class Login(Resource):
             api.logger.info(f"user {user_email} not active")
             raise Unauthorized(f"user {user_email} not active")
         if user.password == hash_password:
-            utils.write_log(user.id, user_log_agent, "success user login")
+            UserClass.write_log(user.id, user_log_agent, "success user login")
             api.logger.info(f"User {user_email} successful login")
-            return utils.create_load_tokens(user_email, user.id, user.role_id)
+            return UserClass.create_load_tokens(user_email, user.id, user.role_id)
 
-        utils.write_log(user.id, user_log_agent, "unsuccess user login")
+        UserClass.write_log(user.id, user_log_agent, "unsuccess user login")
         api.logger.info("Username password broken")
         raise Unauthorized("Username password broken")
 
@@ -109,7 +109,8 @@ class Logout(Resource):
         if has_refresh_token is None:
             api.logger.info("Need refresh token")
             raise BadRequest("Need refresh token")
-        refresh_payload = utils.get_payload(has_refresh_token)
+        # refresh_payload = utils.get_payload(has_refresh_token)
+        refresh_payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=has_refresh_token)
         res["user_email"] = refresh_payload["user_email"]
         if refresh_payload["type"] == "refresh_token" and refresh_payload["Check_token"] is True:
             refresh_key = refresh_payload["user_id"] + "_refresh_token"
@@ -120,7 +121,7 @@ class Logout(Resource):
             raise Unauthorized("Refresh token broken")
         res["status"] = "logout"
         try:
-            utils.write_log(refresh_payload["user_id"], request.headers.get("User-Agent"), "success user logout")
+            UserClass.write_log(refresh_payload["user_id"], request.headers.get("User-Agent"), "success user logout")
             api.logger.info(f"User {refresh_payload['user_email']} logout")
         except Exception:
             logging.info(f"ERROR write log {refresh_payload['user_id']}, {request.headers.get('User-Agent')}")
@@ -145,8 +146,8 @@ class Profile(Resource):
         """
         profile = {}
         try:
-            payload = utils.get_payload(request.headers.get("access_token"))
-
+            # payload = utils.get_payload(request.headers.get("access_token"))
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers.get("access_token"))
             profile["user_email"] = payload["user_email"]
             if payload["type"] == "access_token":
                 profile["redirect"] = f"/users/{payload['user_id']}/profile/"
@@ -179,7 +180,8 @@ class UserCheck(Resource):
         if captcha_token is None:
             api.logger.info("Captcha token not present")
             raise BadRequest("Captcha token not present")
-        captcha_token_payload = utils.get_payload(captcha_token)
+        # captcha_token_payload = utils.get_payload(captcha_token)
+        captcha_token_payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=captcha_token)
         if captcha_token_payload["Check_token"] is True and \
                 captcha_token_payload["type"] == "captcha":
             user_params = request.json
@@ -187,7 +189,7 @@ class UserCheck(Resource):
             if user is not None:
                 api.logger.info(f"User_name {user_params['email']} is busy")
                 raise BadRequest(f"User_name {user_params['email']} is busy")
-            res = utils.create_user(user_params)
+            res = UserClass.create_user(user_params)
             api.logger.info(res)
             return res
         api.logger.info("Captcha token broken")
@@ -214,7 +216,7 @@ class Admin(Resource):
         profile = {}
         try:
             if decor_function.check_self_user(request.headers.get("access_token"), user_id):
-                profile = utils.make_user_profile(user_id, profile)
+                profile = UserClass.make_user_profile(user_id, profile)
                 api.logger.info(f"User {user_id} get profile")
                 return profile
             api.logger.info("Token broken or have not permitins or not self")
@@ -236,16 +238,16 @@ class Admin(Resource):
         Edit user profile
         """
         try:
-            payload = utils.get_payload(request.headers.get("access_token"))
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["access_token"])
             if payload == "Token broken":
                 api.logger.info("Token broken")
                 raise Unauthorized("Token broken")
             request_dict = request.json
 
             logging.info(f"request_dict {request_dict}")
-            profile = utils.update_profile(request_dict, payload, user_id)
+            profile = UserClass.update_profile(request_dict, payload, user_id)
             api.logger.info(f"User: {payload['user_id']} update profile {profile}")
-            utils.write_log(payload["user_id"], request.headers.get('User-Agent'), "update user profile")
+            UserClass.write_log(payload["user_id"], request.headers.get('User-Agent'), "update user profile")
 
         except Exception:
             api.logger.info("is not exists")
@@ -275,14 +277,14 @@ class UserLogs(Resource):
         List of user logs
         """
         try:
-            params = utils.get_params(request)
+            params = UserClass.get_params(request)
         except Exception:
             api.logger.info("Page is not int or not exists")
             raise BadRequest("Page is not int or not exists")
         try:
             if decor_function.check_admin_or_self_user(request.headers["access_token"], user_id):
                 api.logger.info(f"User {user_id} get logs")
-                return utils.get_login_log_list(user_id, params)
+                return UserClass.get_login_log_list(user_id, params)
             api.logger.info("Token is not self or admin")
             raise Forbidden("Token is not self or admin")
         except Exception:
@@ -300,15 +302,13 @@ class Confirm(Resource):
     # @api.response(200, 'Success', model_response_users_id_profile_response_get)
     @api.response(401, 'Unauthorized', model_response_400_401_403_404_base)
     @api.response(403, 'Forbidden', model_response_400_401_403_404_base)
-    # @api.doc(security="access_token")
-    # @decor_function.active_required()
     def get(self, confirm_id):
         """
         Confirm email
         """
 
         try:
-            response = user_settings.confirm_email(confirm_id)
+            response = UserSettings.confirm_email(confirm_id)
             if response == "Confirm record not exists":
                 api.logger.info("Confirm record not exists")
                 raise Unauthorized("Confirm record not exists")

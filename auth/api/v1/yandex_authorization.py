@@ -1,6 +1,6 @@
 from core import schemas, utils  # type: ignore
 from core.config import settings  # type: ignore
-from core.ext_users import YandexUser  # type: ignore
+from service.ext_users import YandexUser  # type: ignore
 from core.logger import file_handler  # type: ignore
 from core.rate_limiter import limiter  # type: ignore
 from db.redis import redis_conn

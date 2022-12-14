@@ -1,14 +1,17 @@
 import flask
 import sjwt  # type: ignore
-from core import schemas, user_settings, utils  # type: ignore
-from core.config import settings  # type: ignore
-from core.logger import file_handler  # type: ignore
-from core.rate_limiter import limiter  # type: ignore
+
 from flask import request
 from flask_restx import Namespace, Resource  # type: ignore
 from werkzeug.exceptions import BadRequest, Unauthorized
 
+from core import schemas  # type: ignore
+from core.config import settings  # type: ignore
+from core.logger import file_handler  # type: ignore
+from core.rate_limiter import limiter  # type: ignore
 from service.user_token import TokenClass
+from service.user import UserClass
+from service.user_settings import UserSettings
 
 authorizations = schemas.authorizations
 api = Namespace("token", description="Endpoint for workwith token", authorizations=authorizations, url_prefix="/token")
@@ -59,7 +62,6 @@ class PayloadGet(Resource):
         Parse token
         """
         api.logger.info("Get payload")
-        # return utils.get_payload(request.headers["access_token"])
         return sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["access_token"])
 
 
@@ -79,7 +81,6 @@ class TokenReissue(Resource):
         Refresh your tokens
         """
         try:
-            # payload = utils.get_payload(request.headers["refresh_token"])
             payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers["refresh_token"])
         except Exception:
             api.logger.info("Have not refresh_token")
@@ -95,7 +96,7 @@ class TokenReissue(Resource):
             raise Unauthorized(f"User {payload['user_id']} has logout")
         resp = flask.Response("Token generated")
         new_payload = {}
-        if user_settings.check_user_subscribtion(payload["user_id"]):
+        if UserSettings.check_user_subscription(payload["user_id"]):
             payload["role"] = "subscriber"
         else:
             payload["role"] = "unsubscriber"
@@ -104,6 +105,6 @@ class TokenReissue(Resource):
         list_token = TokenClass.create_two_token(new_payload)
         for token in list_token:
             resp.headers[token] = list_token[token]
-        utils.write_log(new_payload["user_id"], "TokenReissue", "success token recreate")
+        UserClass.write_log(new_payload["user_id"], "TokenReissue", "success token recreate")
         api.logger.info(f"{new_payload['user_id']} TokenReissue success token recreate")
         return resp
