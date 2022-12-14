@@ -1,23 +1,8 @@
-import logging
-import math
-import uuid
-from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any, Optional
-
-import requests
+from flask import request  # type: ignore
 import sjwt  # type: ignore
-from core import hash, schemas  # type: ignore
-from core.config import settings  # type: ignore
-from db.postgres import db  # type: ignore
-from db.rabbitmq import queue
+from core.config import settings
 from db.redis import redis_conn  # type: ignore
-from flask import Response, request  # type: ignore
-from models.confirm_email import ConfirmEmail
-from models.roles import Roles
-from models.users import Users
-from models.users_logs import UsersLogs
-# from service.user_settings import UserSettings
 
 
 class TokenClass:

@@ -4,6 +4,7 @@ from flask import jsonify, request
 from core.config import settings
 import sjwt
 
+
 def admin_required():
     def wrapper(fn):
         @wraps(fn)

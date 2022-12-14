@@ -3,14 +3,11 @@ import math
 from datetime import datetime
 from functools import wraps
 from typing import Tuple, Union
+from flask import request
 
-import sjwt
 from core import schemas  # type: ignore
 from service import hash, user_settings  # type: ignore
-from core.config import settings
 from db.postgres import db
-from db.redis import redis_conn
-from flask import Response, request
 from models.roles import Roles
 from models.users import Users
 from models.users_logs import UsersLogs
@@ -104,7 +101,7 @@ class UserClass:
 
     @classmethod
     def get_users_notification_list(cls, query_params: dict) -> dict:
-        check_pages = check_page_params(query_params)
+        check_pages = UserClass.check_page_params(query_params)
         if check_pages is not True:
             return check_pages  # type: ignore
         res = {}
@@ -115,7 +112,7 @@ class UserClass:
             count, users_array = UserClass().get_count_ws_list(query_params)
         else:
             return {"type_notification": "wrong"}
-        check_max_number = check_page_number(count, query_params)
+        check_max_number = UserClass.check_page_number(count, query_params)
         if check_max_number is not True:
             return check_max_number  # type: ignore
         for user in users_array.items:

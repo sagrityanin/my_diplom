@@ -1,19 +1,9 @@
-import logging
-import math
-from datetime import datetime
-from functools import wraps
-from typing import Tuple, Union
-
 import sjwt
-from core import schemas  # type: ignore
-from service import hash, user_settings  # type: ignore
+
 from core.config import settings
-from db.postgres import db
 from db.redis import redis_conn
-from flask import Response, request
+from flask import Response
 from models.roles import Roles
-from models.users import Users
-from models.users_logs import UsersLogs
 
 
 class TokenClass:

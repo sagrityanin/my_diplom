@@ -2,7 +2,6 @@ import logging
 import math
 import uuid
 from datetime import datetime, timedelta
-from functools import wraps
 from typing import Any, Optional
 
 import requests
@@ -11,8 +10,7 @@ from core import hash, schemas  # type: ignore
 from core.config import settings  # type: ignore
 from db.postgres import db  # type: ignore
 from db.rabbitmq import queue
-from db.redis import redis_conn  # type: ignore
-from flask import Response, request  # type: ignore
+from flask import Response  # type: ignore
 from models.confirm_email import ConfirmEmail
 from models.roles import Roles
 from models.users import Users
