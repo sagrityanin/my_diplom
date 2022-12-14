@@ -2,11 +2,13 @@ import logging
 from flask import request
 from flask_restx import Namespace, Resource, fields  # type: ignore
 from models.users import Users
-from payload_get import token_payload  # type: ignore
 from werkzeug.exceptions import BadRequest, Forbidden, Unauthorized
+import sjwt
 
 from core import schemas  # type: ignore
-from service import decor_function, hash, utils  # type: ignore
+from service import decor_function, hash  # type: ignore
+from service.user import UserClass
+from service.user_token import TokenClass
 from core.config import settings  # type: ignore
 from core.logger import file_handler  # type: ignore
 from service.rate_limiter import limiter  # type: ignore
@@ -75,11 +77,11 @@ class Login(Resource):
         if user.is_active is False:
             raise Unauthorized(f"user {user_email} not active")
         if user.password == hash_password:
-            utils.write_log(user.id, user_log_agent, "success user login")
+            UserClass.write_log(user.id, user_log_agent, "success user login")
             api.logger.info(f"Admin {user.email} id {user.id} success login")
-            return utils.create_load_tokens(user_email, user.id, user.role_id)
+            return TokenClass.create_load_tokens(user_email, user.id, user.role_id)
 
-        utils.write_log(user.id, user_log_agent, "unsuccess user login")
+        UserClass.write_log(user.id, user_log_agent, "unsuccess user login")
         raise Unauthorized("Username password broken")
 
 
@@ -103,7 +105,7 @@ class Logout(Resource):
         has_refresh_token = request.headers.get("refresh_token")
         if has_refresh_token is None:
             raise BadRequest("Need refresh token")
-        refresh_payload = token_payload.get_payload_sjwt(has_refresh_token)
+        refresh_payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=has_refresh_token)
         res["user_email"] = refresh_payload["user_email"]
         if refresh_payload["type"] == "refresh_token" and refresh_payload["Check_token"] is True:
             refresh_key = refresh_payload["user_id"] + "_refresh_token"
@@ -113,7 +115,7 @@ class Logout(Resource):
             raise Unauthorized("Refresh token broken")
         res["status"] = "logout"
         try:
-            utils.write_log(refresh_payload["user_id"], request.headers.get("User-Agent"), "success user logout")
+            UserClass.write_log(refresh_payload["user_id"], request.headers.get("User-Agent"), "success user logout")
         except Exception:
             logging.info(f"ERROR write log {refresh_payload['user_id']}, {request.headers.get('User-Agent')}")
         api.logger.info(res)
@@ -140,7 +142,7 @@ class UserCheck(Resource):
         if user is not None:
             api.logger.info(f"User_name {user_params['email']} is busy")
             raise BadRequest(f"User_name {user_params['email']} is busy")
-        res = utils.create_user(user_params)
+        res = UserClass.create_user(user_params)
         api.logger.info(res)
         return res
 
@@ -166,7 +168,7 @@ class Admin(Resource):
         profile = {}
         try:
             if decor_function.check_admin_or_self_user(request.headers.get("access_token"), user_id):
-                profile = utils.make_user_profile(user_id, profile)
+                profile = UserClass.make_user_profile(user_id, profile)
                 api.logger.info(profile)
                 return profile
             api.logger.info("Token broken or have not permitins")
@@ -191,12 +193,12 @@ class Admin(Resource):
         Edit user profile
         """
         try:
-            payload = token_payload.get_payload_sjwt(request.headers.get("access_token"))
+            payload = sjwt.checktoken.get_payload(key=settings.JWT_KEY, token=request.headers.get("access_token"))
             api.logger.info(f"payload in post profile {payload}")
             request_dict = request.json
             api.logger.info(f"request_dict {request_dict}")
-            profile = utils.update_profile(request_dict, payload, user_id)
-            utils.write_log(payload["user_id"], request.headers.get('User-Agent'), "update user profile by admin")
+            profile = UserClass.update_profile(request_dict, payload, user_id)
+            UserClass.write_log(payload["user_id"], request.headers.get('User-Agent'), "update user profile by admin")
         except Exception:
             api.logger.info("User is not exists")
             raise BadRequest("User is not exists")
@@ -227,12 +229,12 @@ class ListUsers(Resource):
         List of users
         """
         try:
-            params = utils.get_params(request)
+            params = UserClass.get_params(request)
         except Exception:
             api.logger.info("Page is not int or not exists")
             raise BadRequest("Page is not int or not exists")
         try:
-            res = utils.get_users_list(params)
+            res = UserClass.get_users_list(params)
         except Exception:
             api.logger.info("token broken")
             raise Unauthorized("token broken")
@@ -262,13 +264,13 @@ class ListNotificationUsers(Resource):
         List of users fot notification
         """
         try:
-            params = utils.get_params(request)
+            params = UserClass.get_params(request)
         except Exception:
             api.logger.info("Page is not int or not exists")
             raise BadRequest("Page is not int or not exists")
 
         try:
-            res = utils.get_users_notification_list(params)
+            res = UserClass.get_users_notification_list(params)
         except Exception as e1:
             api.logger.info(e1)
             raise Unauthorized("token may be broken")
@@ -300,13 +302,13 @@ class UserLogs(Resource):
         List of user logs
         """
         try:
-            params = utils.get_params(request)
+            params = UserClass.get_params(request)
         except Exception:
             api.logger.info("Page is not int or nor exists")
             raise BadRequest("Page is not int or nor exists")
         try:
             if decor_function.check_admin_or_self_user(request.headers["access_token"], user_id):
-                res = utils.get_login_log_list(user_id, params)
+                res = UserClass.get_login_log_list(user_id, params)
                 api.logger.info(res)
                 return res
             api.logger.info("Token ")
@@ -341,7 +343,7 @@ class UserEmail(Resource):
             api.logger.info("Need user_id")
             raise BadRequest("Need user_id")
         try:
-            res = utils.get_user_email(user_id)
+            res = UserClass.get_user_email(user_id)
         except Exception:
             api.logger.info("Bad user_id")
             raise Unauthorized("Bad user_id")
